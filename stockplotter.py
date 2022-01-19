@@ -8,14 +8,26 @@ import pandas_datareader.data as web
 from datetime import date
 
 # Fetches all tickers listed on nasdaq
-all_tickers = ['AAPL', 'AMZN', 'GOOG', 'TSLA']
+all_tickers = ['AAPL','ADBE','ADI','ADP','ADSK','AEP','ALGN','AMAT',
+                'AMD','AMGN','AMZN','ANSS','ASML','ATVI','AVGO','BIDU',
+                'BIIB','BKNG','CDNS','CDW','CERN','CHKP','CHTR','CMCSA',
+                'COST','CPRT','CRWD','CSCO','CSX','CTAS','CTSH','DLTR',
+                'DOCU','DXCM','EA','EBAY','EXC','FAST','FB','FISV','FOX',
+                'FOXA','GILD','GOOG','GOOGL','HON','IDXX','ILMN','INCY',
+                'INTC','INTU','ISRG','JD','KDP','KHC','KLAC','LRCX','LULU',
+                'MAR','MCHP','MDLZ','MELI','MNST','MRNA','MRVL','MSFT',
+                'MTCH','MU','NFLX','NTES','NVDA','NXPI','OKTA','ORLY',
+                'PAYX','PCAR','PDD','PEP','PTON','PYPL','QCOM','REGN',
+                'ROST','SBUX','SGEN','SIRI','SNPS','SPLK','SWKS','TCOM',
+                'TEAM','TMUS','TSLA','TXN','VRSK','VRSN','VRTX','WBA',
+                'WDAY','XEL','XLNX','ZM']
 
 # Starting graph attributes
-start_date = '2022-01-01'
+start_date = '2020-01-01'
 end_date = '2022-01-18'
 start_ticker = all_tickers[0]
 start_df = web.DataReader(all_tickers[0], 'stooq', start=start_date, end=end_date)
-start_trace = go.Scatter(x=start_df.index, y=start_df.Close, mode='lines+markers', name=start_ticker)
+start_trace = go.Scatter(x=start_df.index, y=start_df.Close, mode='lines', name=start_ticker)
 
 # List of dictionaries containing trace dataframe and ticker
 stocks = [{
@@ -27,7 +39,8 @@ stocks = [{
 
 app = dash.Dash(__name__)
 app.layout = html.Div([
-    html.H1("Select a company's ticker from the dropdown below"),
+    html.H1("Stock Plotter"),
+    html.H3('Select symbol from NASDAQ-100'),
     html.Div([
         dcc.Dropdown(
             id='ticker-dropdown',
@@ -88,7 +101,7 @@ def update_output_div(tickers, pstart, pend):
     for stock in stocks:
         if stock['ticker'] in tickers:
             traces.append(go.Scatter(x=stock['df'].index, y=stock['df'].Close, 
-                                     mode='lines+markers', name=stock['ticker']))
+                                     mode='lines', name=stock['ticker']))
 
     fig = go.Figure(data=traces, 
                     layout=go.Layout(title=f'Stock price through interval {pstart} / {pend}'))
