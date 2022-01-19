@@ -1,32 +1,42 @@
 import plotly.express as px
 import plotly.graph_objects as go
-
 import dash
 from dash.dependencies import Input, Output
 from dash import dcc
 from dash import html
-
 import pandas_datareader.data as web
 from datetime import date
 
 app = dash.Dash(__name__)
-tickers = ['AAPL', 'AMZN', 'GOOG', 'TSLA']
-df = [web.DataReader(tickers[0], 'stooq', start='2022-01-01', end='2022-01-18')]
-prev = []
+# Fetches all tickers listed on nasdaq
+all_tickers = ['AAPL', 'AMZN', 'GOOG', 'TSLA']
+
+# Starting graph attributes
+start_ticker = all_tickers[0]
+start_df = web.DataReader(all_tickers[0], 'stooq', start='2022-01-01', end='2022-01-18')
+start_trace = go.Scatter(x=start_df.index, y=start_df.Close, mode='lines+markers', name=start_ticker)
+
+# List of dictionaries containing trace dataframe and ticker
+stocks = [{
+    'ticker': start_ticker,
+    'df': start_df
+}]
 
 app.layout = html.Div([
     html.H1("Select a company's ticker from the dropdown below"),
     dcc.Dropdown(
         id='ticker-dropdown',
-        options=[{'label': ticker, 'value': ticker} for ticker in tickers],
-        value=[tickers[0]],
+        options=[{'label': ticker, 'value': ticker} for ticker in all_tickers],
+        value=[start_ticker],
         multi=True
     ),
     html.Br(),
     html.Div(id='my-output'),
     dcc.Graph(
         id='stock-graph',
-        figure= go.Figure(data=go.Scatter(x=df[0].index, y=df[0].Close, mode='markers')),
+
+        # Starting trace
+        figure= go.Figure(data=start_trace),
     )
 ])
 
@@ -35,18 +45,23 @@ app.layout = html.Div([
     Output('stock-graph', 'figure'),
     Input(component_id='ticker-dropdown', component_property='value')
 )
-def update_output_div(ptickers):
-    df_list = []
+def update_output_div(tickers):
+    # Add new dictionary to stocks, if not allready in stocks
+    for ticker in tickers:
+        if ticker not in [stock['ticker'] for stock in stocks]:
+            stocks.append({
+                'ticker': ticker,
+                'df': web.DataReader(ticker, 'stooq', start='2022-01-01', end='2022-01-18')
+            })
+
+    # Create list of traces which will be plotted
     traces = []
-    for c, pticker in enumerate(ptickers):
-        print(f'Current pticker: {pticker}')
-        print(f'Current c counter: {c}')
-        df_list.append(web.DataReader(pticker, 'stooq', start='2022-01-01', end='2022-01-18'))
-        print(df_list[c])
-        traces.append(go.Scatter(x=df_list[c].index, y=df_list[c].Close, mode='markers'))
-    
+    for stock in stocks:
+        if stock['ticker'] in tickers:
+            traces.append(go.Scatter(x=stock['df'].index, y=stock['df'].Close, mode='lines+markers', name=stock['ticker']))
+
     fig = go.Figure(data=traces)
-    return 'Selected Tickers: {}'.format(ptickers), fig
+    return 'Selected Tickers: {}'.format(tickers), fig
 
 
 if __name__ == '__main__':
