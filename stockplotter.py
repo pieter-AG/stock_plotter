@@ -5,9 +5,10 @@ from dash.dependencies import Input, Output
 from dash import dcc
 from dash import html
 import pandas_datareader.data as web
-from datetime import date
+from datetime import date, timedelta
 
-# Fetches all tickers listed on nasdaq
+
+# NASDAQ 100 tickers
 all_tickers = ['AAPL','ADBE','ADI','ADP','ADSK','AEP','ALGN','AMAT',
                 'AMD','AMGN','AMZN','ANSS','ASML','ATVI','AVGO','BIDU',
                 'BIIB','BKNG','CDNS','CDW','CERN','CHKP','CHTR','CMCSA',
@@ -24,7 +25,7 @@ all_tickers = ['AAPL','ADBE','ADI','ADP','ADSK','AEP','ALGN','AMAT',
 
 # Starting graph attributes
 start_date = '2020-01-01'
-end_date = '2022-01-18'
+end_date = date.today() - timedelta(days=1)
 start_ticker = all_tickers[0]
 start_df = web.DataReader(all_tickers[0], 'stooq', start=start_date, end=end_date)
 start_trace = go.Scatter(x=start_df.index, y=start_df.Close, mode='lines', name=start_ticker)
@@ -37,6 +38,8 @@ stocks = [{
     'df': start_df
 }]
 
+
+# Create dash board and launch
 app = dash.Dash(__name__)
 app.layout = html.Div([
     html.H1("Stock Plotter"),
@@ -59,12 +62,12 @@ app.layout = html.Div([
         ),
     ], style={'width': '20%', 'padding': '0.5%'}),
     html.Br(),
-    html.Div(id='my-output'),
+    html.H4(id='my-output', style={'margin-left': '5%'}),
     dcc.Graph(
         id='stock-graph',
         figure= go.Figure(data=start_trace),
     )
-], style={'padding': '1%', 'margin': '0 auto'})
+], style={'padding': '3%', 'border': '10px solid grey'})
 
 @app.callback(
     Output(component_id='my-output', component_property='children'),
@@ -104,7 +107,7 @@ def update_output_div(tickers, pstart, pend):
                                      mode='lines', name=stock['ticker']))
 
     fig = go.Figure(data=traces, 
-                    layout=go.Layout(title=f'Stock price through interval {pstart} / {pend}'))
+                    layout=go.Layout(title=f'Closing stock price through interval {pstart} / {pend}'))
     return 'Selected Tickers: {}'.format(tickers), fig
 
 
