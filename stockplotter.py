@@ -38,7 +38,6 @@ stocks = [{
     'df': start_df
 }]
 
-
 # Create dash board and launch
 app = dash.Dash(__name__)
 app.layout = html.Div([
@@ -89,7 +88,6 @@ def update_output_div(tickers, pstart, pend):
             })
 
     # Add new dictionary to stocks, if not allready in stocks
-    tickers_update = []         # List of stocks that require a date-range update
     for ticker in tickers:
         if ticker not in [stock['ticker'] for stock in stocks]:
             stocks.append({
